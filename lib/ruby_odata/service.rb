@@ -186,8 +186,29 @@ class Service
     @next_uri = nil
   end
 
+  def rest_options_with_csrf_request
+    rest_options = @rest_options
+    rest_options[:headers] ||= {}
+    rest_options[:headers]['X-CSRF-Token'] = 'Fetch'
+    rest_options
+  end
+
+  def set_csrf_token(value)
+    @rest_options[:headers] ||= {}
+    @rest_options[:headers]['X-CSRF-Token'] ||= value
+  end
+
+  def set_cookies(values)
+    @rest_options[:cookies] ||= {}
+    @rest_options[:cookies].reverse_merge!(values)
+  end
+
   def set_namespaces
-    @edmx = Nokogiri::XML(RestClient::Resource.new(build_metadata_uri, @rest_options).get)
+    result = RestClient::Resource.new(build_metadata_uri, rest_options_with_csrf_request).get
+    set_csrf_token(result.headers[:x_csrf_token])
+    set_cookies(result.cookies)
+
+    @edmx = Nokogiri::XML(result)
     @ds_namespaces = {
       "m" => "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
       "edmx" => "http://schemas.microsoft.com/ado/2007/06/edmx",
