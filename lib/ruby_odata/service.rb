@@ -187,7 +187,7 @@ class Service
   end
 
   def rest_options_with_csrf_request
-    rest_options = @rest_options
+    rest_options = @rest_options.dup
     rest_options[:headers] ||= {}
     rest_options[:headers]['X-CSRF-Token'] = 'Fetch'
     rest_options
